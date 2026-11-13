@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block title %}Provider workspace | SmartLocal{% endblock %}
+
+{% block content %}
+<section
+  class="p-4 p-lg-5 rounded-4 text-white mb-4"
+  style="background:linear-gradient(120deg,#162b43,#176f68)"
+>
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+      <span class="small text-uppercase">Provider workspace</span>
+      <h1 class="display-6 fw-bold">Your services, your requests.</h1>
+      <p class="mb-0">Manage listings and respond to neighbors looking for help.</p>
+    </div>
+
+    <a class="btn btn-light btn-lg" href="/services/new/">+ New listing</a>
+  </div>
+</section>
+
+<div class="row g-4">
+  <div class="col-lg-5">
+    <section class="soft-card card p-4">
+      <h2 class="h4">My listings</h2>
+
+      {% for item in listings %}
+        <div class="border-bottom py-3">
+          <div class="d-flex justify-content-between gap-2">
+            <a class="fw-bold" href="/services/{{ item.id }}/">
+              {{ item.title }}
+            </a>
+            <span class="badge text-bg-light">
+              {{ item.request_count }} requests
+            </span>
+          </div>
+
+          <small class="text-secondary">
+            {{ item.city }} · {{ item.get_listing_type_display }}
+          </small>
+
+          <div class="mt-2 d-flex gap-3">
+            <a href="/services/{{ item.id }}/edit/">Edit</a>
+
+            <form method="post" action="/services/{{ item.id }}/delete/">
+              {% csrf_token %}
+              <button
+                class="btn btn-link btn-sm text-danger p-0"
+                onclick="return confirm('Delete this listing?')"
+              >
+                Delete
+              </button>
+            </form>
+          </div>
+        </div>
+      {% empty %}
+        <p class="text-secondary">You have not posted any listings yet.</p>
+      {% endfor %}
+    </section>
+  </div>
+
+  <div class="col-lg-7">
+    <section class="soft-card card p-4">
+      <h2 class="h4">Incoming requests</h2>
+
+      {% for booking in incoming %}
+        <article class="border-bottom py-3">
+          <div class="d-flex justify-content-between">
+            <strong>{{ booking.listing.title }}</strong>
+
+            <span class="badge
+              {% if booking.status == 'completed' %}text-bg-success
+              {% elif booking.status == 'pending' %}text-bg-warning
+              {% elif booking.status == 'cancelled' %}text-bg-secondary
+              {% else %}text-bg-primary{% endif %}">
+              {{ booking.get_status_display }}
+            </span>
+          </div>
+
+          <div class="small text-secondary">
+            From {{ booking.customer.username }} ·
+            {{ booking.created_at|date:"d M Y, H:i" }}
+          </div>
+
+          <p class="my-2">{{ booking.message }}</p>
+
+          {% if booking.status == 'pending' or booking.status == 'accepted' %}
+            <form
+              method="post"
+              action="/bookings/{{ booking.id }}/status/"
+              class="d-flex gap-2"
+            >
+              {% csrf_token %}
+
+              {% if booking.status == 'pending' %}
+                <button class="btn btn-sm btn-success"
+                        name="status" value="accepted">
+                  Accept
+                </button>
+              {% endif %}
+
+              {% if booking.status == 'accepted' %}
+                <button class="btn btn-sm btn-primary"
+                        name="status" value="completed">
+                  Mark completed
+                </button>
+              {% endif %}
+
+              <button class="btn btn-sm btn-outline-danger"
+                      name="status" value="cancelled">
+                Decline / cancel
+              </button>
+            </form>
+          {% endif %}
+        </article>
+      {% empty %}
+        <p class="text-secondary">
+          No requests yet. Share your active listings with your community.
+        </p>
+      {% endfor %}
+    </section>
+  </div>
+</div>
+{% endblock %}
