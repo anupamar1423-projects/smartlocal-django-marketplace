@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% block title %}My profile | SmartLocal{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-end flex-wrap gap-3 mb-4">
+  <div>
+    <span class="text-success fw-bold small">YOUR COMMUNITY IDENTITY</span>
+    <h1 class="fw-bold mb-0">Profile &amp; portfolio</h1>
+    <p class="text-secondary mb-0">
+      Help neighbors understand what you do and see examples of your work.
+    </p>
+  </div>
+  <a href="/providers/{{ user.username }}/" class="btn btn-outline-primary">
+    View public profile
+  </a>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-7">
+    <section class="soft-card card p-4 p-md-5">
+      <h2 class="h4">Profile information</h2>
+
+      <div class="photo-preview mb-3">
+        {% if profile.profile_photo %}
+          <img id="profilePhotoPreview" src="{{ profile.profile_photo.url }}" alt="Current profile photo">
+          <div id="profilePhotoPlaceholder" class="d-none">Photo preview</div>
+        {% else %}
+          <img id="profilePhotoPreview" class="d-none" alt="Selected profile photo preview">
+          <div id="profilePhotoPlaceholder">Your profile photo preview</div>
+        {% endif %}
+      </div>
+
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ profile_form.as_p }}
+        <button class="btn btn-primary">Save profile</button>
+      </form>
+    </section>
+  </div>
+
+  <div class="col-lg-5">
+    <section class="soft-card card p-4">
+      <h2 class="h4">Add portfolio work</h2>
+      <p class="text-secondary small">Choose an image to preview it before uploading.</p>
+
+      <div class="portfolio-preview mb-3">
+        <img id="portfolioImagePreview" class="d-none" alt="Selected portfolio image preview">
+        <div id="portfolioImagePlaceholder">Portfolio image preview</div>
+      </div>
+
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="add_portfolio">
+        {{ portfolio_form.as_p }}
+        <button class="btn btn-outline-primary">Upload portfolio image</button>
+      </form>
+
+      <hr>
+      <h3 class="h6">Your images</h3>
+      <div class="row g-2">
+        {% for image in profile.portfolio_images.all %}
+          <div class="col-6">
+            <img src="{{ image.image.url }}" class="rounded w-100 saved-image"
+                 alt="{{ image.caption }}">
+            <div class="d-flex justify-content-between small mt-1">
+              <span>{{ image.caption|default:"Work sample" }}</span>
+              <form method="post" action="/portfolio/{{ image.id }}/delete/">
+                {% csrf_token %}
+                <button class="btn btn-sm btn-link text-danger p-0">Remove</button>
+              </form>
+            </div>
+          </div>
+        {% empty %}
+          <p class="small text-secondary">No portfolio uploads yet.</p>
+        {% endfor %}
+      </div>
+    </section>
+  </div>
+</div>
+
+<style>
+  input:not([type=checkbox]):not([type=file]), textarea {
+    display: block;
+    width: 100%;
+    padding: .6rem;
+    border: 1px solid #ced4da;
+    border-radius: 10px;
+  }
+
+  textarea { min-height: 90px; }
+
+  .photo-preview, .portfolio-preview {
+    min-height: 150px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: 1px dashed #aab9c6;
+    border-radius: 14px;
+    background: #f7fafc;
+    color: #667788;
+  }
+
+  .photo-preview img {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  .portfolio-preview img {
+    max-width: 100%;
+    max-height: 230px;
+    object-fit: contain;
+  }
+
+  .saved-image {
+    height: 120px;
+    object-fit: cover;
+  }
+</style>
+
+<script>
+  function previewImage(inputId, imageId, placeholderId) {
+    const input = document.getElementById(inputId);
+    const image = document.getElementById(imageId);
+    const placeholder = document.getElementById(placeholderId);
+
+    if (!input || !image || !placeholder) return;
+
+    input.addEventListener("change", function () {
+      const file = this.files && this.files[0];
+      if (!file) return;
+
+      if (!file.type.startsWith("image/")) {
+        alert("Please choose an image file.");
+        this.value = "";
+        return;
+      }
+
+      image.src = URL.createObjectURL(file);
+      image.classList.remove("d-none");
+      placeholder.classList.add("d-none");
+    });
+  }
+
+  previewImage("id_profile_photo", "profilePhotoPreview", "profilePhotoPlaceholder");
+  previewImage("id_image", "portfolioImagePreview", "portfolioImagePlaceholder");
+</script>
+{% endblock %}
