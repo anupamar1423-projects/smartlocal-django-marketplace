@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Community feedback | SmartLocal{% endblock %}
+
+{% block content %}
+<div class="p-4 p-md-5 rounded-4 mb-4" style="background:#fff0dc">
+  <span class="small fw-bold text-uppercase">Trust grows through feedback</span>
+  <h1 class="display-6 fw-bold">Community reviews</h1>
+  <p class="mb-0 text-secondary">
+    See feedback you've received and the reviews you've written.
+  </p>
+</div>
+
+<div class="row g-4">
+  <section class="col-lg-6">
+    <div class="soft-card card p-4 h-100">
+      <h2 class="h4">Reviews about my services</h2>
+
+      {% for review in received %}
+        <article class="border-bottom py-3">
+          <div class="d-flex justify-content-between">
+            <strong>{{ review.booking.listing.title }}</strong>
+            <span class="text-warning fw-bold">★ {{ review.rating }}/5</span>
+          </div>
+
+          <p class="my-2">{{ review.comment }}</p>
+
+          <small class="text-secondary">
+            {{ review.reviewer.username }} ·
+            {{ review.created_at|date:"d M Y" }}
+          </small>
+        </article>
+      {% empty %}
+        <p class="text-secondary">
+          No feedback received yet. Complete a booking to invite a review.
+        </p>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="col-lg-6">
+    <div class="soft-card card p-4 h-100">
+      <h2 class="h4">Reviews I've written</h2>
+
+      {% for review in written %}
+        <article class="border-bottom py-3">
+          <div class="d-flex justify-content-between">
+            <a class="fw-semibold"
+               href="/services/{{ review.booking.listing.id }}/">
+              {{ review.booking.listing.title }}
+            </a>
+            <span class="text-warning fw-bold">★ {{ review.rating }}/5</span>
+          </div>
+
+          <p class="my-2">{{ review.comment }}</p>
+
+          <small class="text-secondary">
+            {{ review.created_at|date:"d M Y" }}
+          </small>
+        </article>
+      {% empty %}
+        <p class="text-secondary">You have not written a review yet.</p>
+      {% endfor %}
+    </div>
+  </section>
+</div>
+{% endblock %}
