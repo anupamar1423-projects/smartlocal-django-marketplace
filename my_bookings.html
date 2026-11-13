@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}My requests | SmartLocal{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+  <span class="text-primary fw-bold small">SEEKER SPACE</span>
+  <h1 class="fw-bold">My service requests</h1>
+  <p class="text-secondary">
+    Follow each request from first message through completion.
+  </p>
+</div>
+
+<div class="row g-3">
+  {% for booking in bookings %}
+    <div class="col-12">
+      <article class="soft-card card">
+        <div class="card-body p-4">
+          <div class="d-flex justify-content-between flex-wrap gap-2">
+            <div>
+              <h2 class="h5 mb-1">
+                <a href="/services/{{ booking.listing.id }}/">
+                  {{ booking.listing.title }}
+                </a>
+              </h2>
+
+              <div class="small text-secondary">
+                Provider:
+                <a href="/providers/{{ booking.listing.owner.username }}/">
+                  {{ booking.listing.owner.username }}
+                </a>
+                · Sent {{ booking.created_at|date:"d M Y, H:i" }}
+              </div>
+            </div>
+
+            <span class="badge align-self-start
+              {% if booking.status == 'completed' %}text-bg-success
+              {% elif booking.status == 'pending' %}text-bg-warning
+              {% elif booking.status == 'cancelled' %}text-bg-secondary
+              {% else %}text-bg-primary{% endif %}">
+              {{ booking.get_status_display }}
+            </span>
+          </div>
+
+          <p class="mt-3 mb-3">{{ booking.message }}</p>
+
+          {% if booking.status == 'pending' or booking.status == 'accepted' %}
+            <form method="post" action="/bookings/{{ booking.id }}/cancel/">
+              {% csrf_token %}
+              <button class="btn btn-sm btn-outline-danger">
+                Cancel request
+              </button>
+            </form>
+          {% elif booking.status == 'completed' %}
+            {% if booking.review %}
+              <span class="text-success small">
+                Review submitted · {{ booking.review.rating }}/5
+              </span>
+            {% else %}
+              <a class="btn btn-sm btn-outline-primary"
+                 href="/bookings/{{ booking.id }}/review/">
+                Leave a review
+              </a>
+            {% endif %}
+          {% endif %}
+        </div>
+      </article>
+    </div>
+  {% empty %}
+    <div class="col-12">
+      <div class="soft-card card p-5 text-center">
+        <h2 class="h4">No requests yet</h2>
+        <p class="text-secondary">
+          Browse nearby services and send a request when you find a match.
+        </p>
+        <a href="/" class="btn btn-primary mx-auto">Explore listings</a>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}
